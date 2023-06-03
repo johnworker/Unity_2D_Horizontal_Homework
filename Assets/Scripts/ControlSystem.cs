@@ -1,20 +1,23 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class ControlSystem : MonoBehaviour
 {
-    [Header("²¾°Ê³t«×"), Range(1, 10)]
+    [Header("ç§»å‹•é€Ÿåº¦"), Range(1, 10)]
     public float moveSpeed = 4.5f;
-    [Header("ª±®a­èÅé")]
+    [Header("ç©å®¶å‰›é«”")]
     public Rigidbody2D rigPlayer;
-    [Header("°Êµe±±¨î¾¹")]
+    [Header("å‹•ç•«æ§åˆ¶å™¨")]
     public Animator ani;
-    [Header("¶]¨B°Ñ¼Æ")]
-    public string parRun = "²¾°Ê¶}Ãö";
-    [Header("¸õÅD")]
-    public float jumpForce = 4000f;
+    [Header("è·‘æ­¥åƒæ•¸")]
+    public string parRun = "ç§»å‹•é–‹é—œ";
+    [Header("è·³èº")]
+    public float jumpForce = 20f;
 
-    [Header("¸õÅD°Ñ¼Æ")]
-    public string parJumping = "¸õÅD¶}Ãö";
+    public float maxJumpTime = 0.5f; // æœ€å¤§è·³èºæ™‚é–“
+    private float jumpTime = 0.0f; // è·³èºå·²ç¶“æŒçºŒçš„æ™‚é–“
+
+    [Header("è·³èºåƒæ•¸")]
+    public string parJumping = "è·³èºé–‹é—œ";
 
     private bool isJumping = false;
 
@@ -28,13 +31,16 @@ public class ControlSystem : MonoBehaviour
     {
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
-        // GetAxisRaw ª½±µÀò±o-1 , 0 , 1 ªº3­Ó¼Æ¦r
+
+        // GetAxisRaw ç›´æ¥ç²å¾—-1 , 0 , 1 çš„3å€‹æ•¸å­—
         float facedirection = Input.GetAxisRaw("Horizontal");
 
         rigPlayer.velocity = new Vector2(h, 0) * moveSpeed;
 
+        // å¦‚æœé¢å‘å€¼ ä¸ç­‰æ–¼ 0
         if(facedirection != 0)
         {
+            // è½‰æ›.ç¸®æ”¾ = æ–° ä¸‰ç¶­å‘é‡(é¢å‘å€¼, 1, 1);
             transform.localScale = new Vector3(facedirection, 1, 1);
         }
 
@@ -46,15 +52,32 @@ public class ControlSystem : MonoBehaviour
     {
         if (Input.GetButtonDown("Jump") && !isJumping)
         {
-            // ½Ğ¼W±j¸õÅD°ª«×
-            rigPlayer.AddForce(new Vector2(0f, jumpForce));
+            rigPlayer.velocity = new Vector2(rigPlayer.velocity.x, jumpForce);
             isJumping = true;
+            jumpTime = 0.0f;
             ani.SetBool(parJumping, true);
+        }
+
+        if (Input.GetButton("Jump") && isJumping)
+        {
+            if (jumpTime < maxJumpTime)
+            {
+                rigPlayer.velocity = new Vector2(rigPlayer.velocity.x, jumpForce);
+                jumpTime += Time.deltaTime;
+            }
+        }
+
+        if (Input.GetButtonUp("Jump"))
+        {
+            isJumping = false;
+            ani.SetBool(parJumping, false);
         }
     }
 
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        // å¦‚æœç¢°æ’å‡½æ•¸.éŠæˆ²ç‰©ä»¶.æ¯”è¼ƒæ¨™ç±¤("åœ°æ¿")
         if (collision.gameObject.CompareTag("Ground"))
         {
             isJumping = false;
